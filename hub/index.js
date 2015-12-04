@@ -2,11 +2,13 @@ var os = require('os');
 var io = require('socket.io-client');
 var SerialDevice = require('serialdevice');
 var debug = require('debug')('chezmoi');
+var Thermometer = require('./thermometer.js');
 
 debug('Starting hub');
 
 var socket = io('http://www.chezmoi.io/');
 var airControl = new SerialDevice('/dev/rfcomm0');
+var thermometer = new Thermometer('/dev/rfcomm1');
 
 var heartbeatId = undefined;
 function heartbeat() {
@@ -20,6 +22,9 @@ socket.on('connect', function () {
 
     if (airControl.isConnected()) {
         socket.emit('device-register', {name: 'air-control'});
+    }
+    if (thermometer.isConnected()) {
+        socket.emit('device-register', {name: 'thermometer'});
     }
 
     heartbeatId = setInterval(heartbeat, 60000);
@@ -52,13 +57,30 @@ function connectAirControl () {
         socket.emit('device-register', {name: 'air-control'});
     });
 }
-
 airControl.on('disconnect', function () {
     socket.emit('device-unregister', {name: 'air-control'});
     debug('Air control disconnected, trying to reconnect in 30 seconds.');
     setTimeout(connectAirControl, 30000);
 });
-
 connectAirControl();
 
 debug('Hub ready');
+
+function connectThermometer () {
+    thermometer.connect(function (err) {
+        if (err) {
+            logger.error('Error during connection with thermometer, retrying in 30 seconds.');
+            setTimeout(connectThermometer, 30000);
+            return;
+        }
+
+        logger.info('Thermometer connected');
+        socket.emit('device-register', {name: 'thermometer'});
+    });
+}
+thermometer.on('disconnect', function () {
+    socket.emit('device-unregister', {name: 'thermometer'});
+    logger.info('Thermometer disconnected, trying to reconnect in 30 seconds.');
+    setTimeout(connectThermometer, 30000);
+});
+connectThermometer();
