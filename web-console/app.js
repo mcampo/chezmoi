@@ -4,6 +4,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var passport = require('passport');
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 var moment = require('moment');
 moment.locale('es');
@@ -12,6 +15,42 @@ var hbs = require('hbs');
 hbs.registerHelper('fromNow', function (date){
     return moment.utc(date).fromNow();
 });
+
+passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_OAUTH_SECRET,
+        callbackURL: "http://www.chezmoi.io/auth/google/callback"
+    },
+    function(token, tokenSecret, profile, done) {
+        var user = {
+            displayName: profile.displayName,
+            email: profile.emails[0].value,
+            photo: profile.photos[0].value
+        };
+        return done(null, user);
+    }
+));
+
+passport.serializeUser(function(user, done) {
+    console.log(user);
+    done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+    done(null, user)
+});
+
+var authorizedUsers = process.env.AUTHORIZED_USERS.split(',');
+function checkAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        if (authorizedUsers.indexOf(req.user.email) >= 0) {
+            return next();
+        }
+        res.render('unauthorized');
+    } else {
+        res.redirect('/login');
+    }
+}
 
 var routes = require('./routes/index');
 var webConsole = require('./routes/console');
@@ -31,8 +70,12 @@ app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({ secret: 'secret' }))
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', routes);
-app.use('/console', webConsole);
+app.use('/console', checkAuthenticated, webConsole);
 
 // catch 404 and forward to error handler
 //app.use(function(req, res, next) {
