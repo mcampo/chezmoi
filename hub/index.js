@@ -1,9 +1,9 @@
 var os = require('os');
 var io = require('socket.io-client');
 var SerialDevice = require('serialdevice');
-var logger = require('./logger').getLogger('hub');
+var debug = require('debug')('chezmoi');
 
-logger.info('Starting hub');
+debug('Starting hub');
 
 var socket = io('http://home-control.herokuapp.com');
 var airControl = new SerialDevice('/dev/rfcomm0');
@@ -14,7 +14,7 @@ function heartbeat() {
 }
 
 socket.on('connect', function () {
-    logger.info('Connected to cloud server');
+    debug('Connected to cloud server');
 
     socket.emit('who', {name: os.hostname()});
 
@@ -26,14 +26,14 @@ socket.on('connect', function () {
 });
 
 socket.on('disconnect', function () {
-    logger.info('Disconnected from cloud server');
+    debug('Disconnected from cloud server');
     if (heartbeatId) {
         clearInterval(heartbeatId);
     };
 });
 
 socket.on('command', function (data) {
-    logger.info('Received command from cloud server', data);
+    debug('Received command from cloud server', data);
 
     if (data && data.command && airControl.isConnected()) {
         airControl.sendData(data.command);
@@ -48,17 +48,17 @@ function connectAirControl () {
             return;
         }
 
-        logger.info('Air control connected');
+        debug('Air control connected');
         socket.emit('device-register', {name: 'air-control'});
     });
 }
 
 airControl.on('disconnect', function () {
     socket.emit('device-unregister', {name: 'air-control'});
-    logger.info('Air control disconnected, trying to reconnect in 30 seconds.');
+    debug('Air control disconnected, trying to reconnect in 30 seconds.');
     setTimeout(connectAirControl, 30000);
 });
 
 connectAirControl();
 
-logger.info('Hub ready');
+debug('Hub ready');
