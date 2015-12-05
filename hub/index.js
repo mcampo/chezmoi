@@ -43,7 +43,7 @@ socket.on('command', function (data) {
 function connectAirControl () {
     airControl.connect(function (err) {
         if (err) {
-            logger.error('Error during connection with air control, retrying in 30 seconds.');
+            debug('Error during connection with air control, retrying in 30 seconds.');
             setTimeout(connectAirControl, 30000);
             return;
         }
