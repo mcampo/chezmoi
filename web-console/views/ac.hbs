@@ -1,0 +1,43 @@
+<div id="ac">
+    {{#if device}}
+        <button type="button" id="btn-on" class="btn">ON</button>
+        <button type="button" id="btn-off" class="btn">OFF</button>
+    {{else}}
+        <div id="msg-no-device">No hay un dispositivo conectado</div>
+    {{/if}}
+</div>
+
+<script>
+    $(document).ready(function () {
+        var btnOn = $('#btn-on');
+        var btnOff = $('#btn-off');
+        var loading = $('#loading');
+        var loadingText = $('#loading-text');
+        var doneCallback = function () {
+            loadingText.text(loadingText.text() + ' listo!');
+            setTimeout(function () {
+                loading.hide();
+            }, 3000);
+        };
+        var failCallback = function (jqXhr, textStatus, errorThrown) {
+            loadingText.text('Error: ' + textStatus + ' - ' + errorThrown);
+            setTimeout(function () {
+                loading.hide();
+            }, 6000);
+        };
+        btnOn.click(function () {
+            loadingText.text('Prendiendo aire...');
+            loading.show();
+            $.post('/devices/{{device.id}}/command', {command: 'on'})
+                    .done(doneCallback)
+                    .fail(failCallback);
+        });
+        btnOff.click(function () {
+            loadingText.text('Apagando aire...');
+            loading.show();
+            $.post('/devices/{{device.id}}/command', {command: 'off'})
+                    .done(doneCallback)
+                    .fail(failCallback);
+        });
+    });
+</script>
