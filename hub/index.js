@@ -5,7 +5,7 @@ var debug = require('debug')('chezmoi');
 
 debug('Starting hub');
 
-var socket = io('http://chezmoi.herokuapp.com/');
+var socket = io('http://www.chezmoi.io/');
 var airControl = new SerialDevice('/dev/rfcomm0');
 
 var heartbeatId = undefined;
