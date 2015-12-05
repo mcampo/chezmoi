@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Chezmoi central hub",
   "main": "index.js",
+  "scripts": {
+    "start": "DEBUG=chezmoi node index.js"
+  },
   "author": "Mariano Campo",
   "license": "MIT",
   "repository": {
