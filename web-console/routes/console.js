@@ -36,6 +36,7 @@ router.get('/thermometer', function (req, res, next) {
     if (thermometerDevice) {
         context.device = thermometerDevice;
         context.subTitle = 'Online - seen ' + moment.utc(thermometerDevice.lastSeen).fromNow();
+        context.temperature = thermometerDevice.lastData.toFixed(1);
     }
     res.render('thermometer', context);
 });
