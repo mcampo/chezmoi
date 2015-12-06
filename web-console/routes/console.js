@@ -19,12 +19,25 @@ router.get('/ac', function (req, res, next) {
         title: 'Air Control',
         subTitle: 'Offline'
     };
-    var allDevices = devices.all();
-    if (allDevices.length > 0) {
-        context.device = allDevices[0];
-        context.subTitle = 'Online - seen ' + moment.utc(allDevices[0].lastSeen).fromNow();
+    var airControlDevice = devices.findOne(device => device.name === 'air-control');
+    if (airControlDevice) {
+        context.device = airControlDevice;
+        context.subTitle = 'Online - seen ' + moment.utc(airControlDevice.lastSeen).fromNow();
     }
     res.render('ac', context);
+});
+
+router.get('/thermometer', function (req, res, next) {
+    var context = {
+        title: 'Thermometer',
+        subTitle: 'Offline'
+    };
+    var thermometerDevice = devices.findOne(device => device.name === 'thermometer');
+    if (thermometerDevice) {
+        context.device = thermometerDevice;
+        context.subTitle = 'Online - seen ' + moment.utc(thermometerDevice.lastSeen).fromNow();
+    }
+    res.render('thermometer', context);
 });
 
 module.exports = router;

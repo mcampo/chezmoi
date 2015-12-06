@@ -8,10 +8,10 @@ function createStore() {
             elements.push(element);
         },
         get: function (id) {
-            var filtered = elements.filter(function (element) {
-                return element.id === id;
-            });
-            return filtered.length > 0 ? filtered[0] : null;
+            return this.findOne(element => element.id === id);
+        },
+        findOne: function (predicate) {
+            return elements.filter(predicate)[0];
         },
         remove: function (elementToRemove) {
             elements.splice(elements.indexOf(elementToRemove), 1);

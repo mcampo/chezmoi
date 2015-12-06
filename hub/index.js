@@ -69,18 +69,18 @@ debug('Hub ready');
 function connectThermometer () {
     thermometer.connect(function (err) {
         if (err) {
-            logger.error('Error during connection with thermometer, retrying in 30 seconds.');
+            debug('Error during connection with thermometer, retrying in 30 seconds.');
             setTimeout(connectThermometer, 30000);
             return;
         }
 
-        logger.info('Thermometer connected');
+        debug('Thermometer connected');
         socket.emit('device-register', {name: 'thermometer'});
     });
 }
 thermometer.on('disconnect', function () {
     socket.emit('device-unregister', {name: 'thermometer'});
-    logger.info('Thermometer disconnected, trying to reconnect in 30 seconds.');
+    debug('Thermometer disconnected, trying to reconnect in 30 seconds.');
     setTimeout(connectThermometer, 30000);
 });
 connectThermometer();
