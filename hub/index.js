@@ -82,5 +82,9 @@ thermometer.on('disconnect', function () {
     socket.emit('device-unregister', {name: 'thermometer'});
     debug('Thermometer disconnected, trying to reconnect in 30 seconds.');
     setTimeout(connectThermometer, 30000);
+})
+thermometer.on('data', function (data) {
+    socket.emit('device-data', {device: 'thermometer', data: data.celsius});
 });
+
 connectThermometer();

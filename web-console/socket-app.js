@@ -34,7 +34,8 @@ function attachHandlers(socket, hub) {
             name: data.name,
             hub: hub,
             socket: socket,
-            lastSeen: Date.now()
+            lastSeen: Date.now(),
+            lastData: null
         };
         devices.add(device);
     });
@@ -51,6 +52,12 @@ function attachHandlers(socket, hub) {
             return device.name === data.name;
         });
         devicesToRemove.forEach(devices.remove);
+    });
+
+    socket.on('device-data', function (event) {
+        debug('device data: %s', JSON.stringify(event));
+        var sourceDevice = devices.findOne(device => device.name === event.device);
+        sourceDevice.lastData = event.data
     });
 
     socket.on('heartbeat', function () {

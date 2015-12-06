@@ -5,6 +5,7 @@ var five = require("johnny-five");
 function Thermometer(path) {
     var self = this;
     self.path = path;
+    self.board = null;
 }
 util.inherits(Thermometer, EventEmitter);
 
@@ -20,7 +21,7 @@ Thermometer.prototype.connect = function (callback) {
         var temperature = new five.Thermometer({
             controller: "LM35",
             pin: "A0",
-            freq: 1000
+            freq: 2000
         });
         temperature.on("data", function() {
             self.emit("data", this);
@@ -48,7 +49,8 @@ Thermometer.prototype.connect = function (callback) {
 };
 
 Thermometer.prototype.isConnected = function () {
-    return true;
+    var self = this;
+    return self.board !== null;
 };
 
 module.exports = Thermometer;
