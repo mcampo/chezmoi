@@ -19,7 +19,7 @@ hbs.registerHelper('fromNow', function (date){
 passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
         clientSecret: process.env.GOOGLE_OAUTH_SECRET,
-        callbackURL: "http://localhost:3000/auth/google/callback"
+        callbackURL: "http://www.chezmoi.io/auth/google/callback"
     },
     function(token, tokenSecret, profile, done) {
         var user = {
