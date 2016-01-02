@@ -22,22 +22,7 @@ function attachHandlers(socket, hub) {
         hub.name = data.name;
     });
     socket.on('device-register', function (data) {
-        debug('device connected: %s', JSON.stringify(data));
-
-        if (!data || !data.name) {
-            //TODO: ack con error
-            return;
-        }
-
-        var device = {
-            id: generateId(),
-            name: data.name,
-            hub: hub,
-            socket: socket,
-            lastSeen: Date.now(),
-            lastData: null
-        };
-        devices.add(device);
+        registerDevice(socket, hub, data);
     });
 
     socket.on('device-unregister', function (data) {
@@ -81,6 +66,24 @@ function attachHandlers(socket, hub) {
         });
         devicesToRemove.forEach(devices.remove);
     });
+}
+
+function registerDevice(socket, hub, data) {
+    if (!data || !data.name) {
+        //TODO: ack con error
+        return;
+    }
+
+    var device = {
+        id: generateId(),
+        name: data.name,
+        hub: hub,
+        socket: socket,
+        lastSeen: Date.now(),
+        lastData: null
+    };
+    devices.add(device);
+    debug('device registered: %s', JSON.stringify({id: device.id, name: device.name, hub: device.hub}));
 }
 
 function generateId() {

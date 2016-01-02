@@ -1,11 +1,13 @@
 <div id="status">
     <h2>Hubs</h2>
     {{#hubs}}
-        {{name}} - {{fromNow lastSeen}}<br>
+        <div>{{name}}</div>
     {{/hubs}}
 
     <h2>Devices</h2>
     {{#devices}}
-        {{name}} [{{hub.name}}] - {{fromNow lastSeen}}<br>
+        <a href="{{name}}" class="device">
+            {{name}} <span class="device-hub">[{{hub.name}}]</span>
+        </a>
     {{/devices}}
 </div>

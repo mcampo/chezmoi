@@ -14,7 +14,7 @@ router.get('/status', function (req, res, next) {
     res.render('status', context);
 });
 
-router.get('/ac', function (req, res, next) {
+router.get('/air-control', function (req, res, next) {
     var context = {
         title: 'Air Control',
         subTitle: 'Offline'
@@ -24,7 +24,7 @@ router.get('/ac', function (req, res, next) {
         context.device = airControlDevice;
         context.subTitle = 'Online - seen ' + moment.utc(airControlDevice.lastSeen).fromNow();
     }
-    res.render('ac', context);
+    res.render('air-control', context);
 });
 
 router.get('/thermometer', function (req, res, next) {
