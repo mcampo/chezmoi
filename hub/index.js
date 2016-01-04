@@ -10,6 +10,10 @@ var socket = io('http://www.chezmoi.io/');
 var airControl = new SerialDevice('/dev/rfcomm0');
 var thermometer = new Thermometer('/dev/rfcomm1');
 
+airControl.name = 'air-control';
+thermometer.name = 'thermometer';
+var devices = [airControl, thermometer];
+
 var heartbeatId = undefined;
 function heartbeat() {
     socket.emit('heartbeat');
@@ -20,12 +24,11 @@ socket.on('connect', function () {
 
     socket.emit('who', {name: os.hostname()});
 
-    if (airControl.isConnected()) {
-        socket.emit('device-register', {name: 'air-control'});
-    }
-    if (thermometer.isConnected()) {
-        socket.emit('device-register', {name: 'thermometer'});
-    }
+    devices.forEach(device => {
+        if (device.isConnected()) {
+            socket.emit('device-register', { name: device.name })
+        }
+    });
 
     heartbeatId = setInterval(heartbeat, 60000);
 });
@@ -39,52 +42,38 @@ socket.on('disconnect', function () {
 
 socket.on('command', function (data) {
     debug('Received command from cloud server', data);
+    var device = devices.find(device => device.name === data.name);
 
-    if (data && data.command && airControl.isConnected()) {
-        airControl.sendData(data.command);
+    if (data && data.command && device && device.isConnected()) {
+        device.sendData(data.command);
     }
 });
 
-function connectAirControl () {
-    airControl.connect(function (err) {
+function connectDevice (device) {
+    device.connect(function (err) {
         if (err) {
-            debug('Error during connection with air control, retrying in 30 seconds.');
-            setTimeout(connectAirControl, 30000);
+            debug(`Error during connection with device ${device.name}, retrying in 30 seconds.`);
+            setTimeout(connectDevice.bind(null, device), 30000);
             return;
         }
 
-        debug('Air control connected');
-        socket.emit('device-register', {name: 'air-control'});
+        debug(`${device.name} connected`);
+        socket.emit('device-register', {name: device.name});
     });
 }
-airControl.on('disconnect', function () {
-    socket.emit('device-unregister', {name: 'air-control'});
-    debug('Air control disconnected, trying to reconnect in 30 seconds.');
-    setTimeout(connectAirControl, 30000);
+
+devices.forEach(device => {
+    device.on('disconnect', function () {
+        socket.emit('device-unregister', {name: device.name});
+        debug(`${device.name} disconnected, trying to reconnect in 30 seconds.`);
+        setTimeout(connectDevice.bind(null, device), 30000);
+    });
+
+    device.on('data', function (data) {
+        socket.emit('device-data', {device: device.name, data: data});
+    });
+
+    connectDevice(device);
 });
-connectAirControl();
 
 debug('Hub ready');
-
-function connectThermometer () {
-    thermometer.connect(function (err) {
-        if (err) {
-            debug('Error during connection with thermometer, retrying in 30 seconds.');
-            setTimeout(connectThermometer, 30000);
-            return;
-        }
-
-        debug('Thermometer connected');
-        socket.emit('device-register', {name: 'thermometer'});
-    });
-}
-thermometer.on('disconnect', function () {
-    socket.emit('device-unregister', {name: 'thermometer'});
-    debug('Thermometer disconnected, trying to reconnect in 30 seconds.');
-    setTimeout(connectThermometer, 30000);
-})
-thermometer.on('data', function (data) {
-    socket.emit('device-data', {device: 'thermometer', data: data.celsius});
-});
-
-connectThermometer();

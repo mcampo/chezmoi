@@ -34,7 +34,7 @@ router.post('/devices/:id/command', function (req, res, next) {
     }
 
     debug("Sending command for %s: %s", device.id, JSON.stringify(command));
-    device.socket.emit('command', { command: command });
+    device.socket.emit('command', { name: device.name, command: command });
 
     res.end();
 });

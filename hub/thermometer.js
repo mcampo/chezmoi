@@ -12,20 +12,23 @@ util.inherits(Thermometer, EventEmitter);
 
 Thermometer.prototype.connect = function (callback) {
     var self = this;
+    self.sensorData = [];
     self.board = new five.Board({
         port: self.path,
         repl: false
     });
 
     self.board.on("ready", function() {
-        var temperature = new five.Thermometer({
+        var thermometer = new five.Thermometer({
             controller: "LM35",
             pin: "A0",
-            freq: 60000
+            freq: 5000
         });
-        temperature.on("data", function() {
-            self.emit("data", this);
+        thermometer.on("data", function() {
+            self.sensorData.push(this.celsius);
         });
+
+        setInterval(self.reportData.bind(self), 60000);
 
         callback(null);
 
@@ -50,9 +53,21 @@ Thermometer.prototype.connect = function (callback) {
 
 Thermometer.prototype.isConnected = function () {
     var self = this;
-    return self.board !== null;
+    return self.board && self.board.isReady;
+};
+
+Thermometer.prototype.sendData = function () {
+    //do nothing
+};
+
+Thermometer.prototype.reportData = function () {
+    var self = this;
+    var average = 0;
+    if (self.sensorData.length > 0) {
+        average = self.sensorData.reduce((previous, current) => previous + current) / self.sensorData.length;
+    }
+    self.emit("data", average);
+    self.sensorData = [];
 };
 
 module.exports = Thermometer;
-
-
